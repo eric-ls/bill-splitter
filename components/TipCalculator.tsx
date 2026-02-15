@@ -23,7 +23,7 @@ export default function TipCalculator({
   const [tipMode, setTipMode] = useState<'percent' | 'dollar'>('percent');
   const [tipPercent, setTipPercent] = useState(20);
   const [tipDollar, setTipDollar] = useState('');
-  const [taxInput, setTaxInput] = useState(tax.toFixed(2));
+  const [taxInput, setTaxInput] = useState(tax === 0 ? '' : tax.toFixed(2));
   const taxInputFocused = useRef(false);
 
   useEffect(() => {
@@ -35,23 +35,28 @@ export default function TipCalculator({
   // Only sync from prop when not actively editing (e.g., receipt upload)
   useEffect(() => {
     if (!taxInputFocused.current) {
-      setTaxInput(tax.toFixed(2));
+      setTaxInput(tax === 0 ? '' : tax.toFixed(2));
     }
   }, [tax]);
 
   const handleTaxChange = (value: string) => {
     setTaxInput(value);
     const parsed = parseFloat(value);
-    if (!isNaN(parsed) && parsed >= 0) {
+    if (value === '' || (parsed === 0)) {
+      onTaxChange(0);
+    } else if (!isNaN(parsed) && parsed >= 0) {
       onTaxChange(parsed);
     }
   };
 
   const handleTaxBlur = () => {
     taxInputFocused.current = false;
-    // Format on blur
+    // Format on blur, keep empty if 0
     const parsed = parseFloat(taxInput);
-    if (!isNaN(parsed) && parsed >= 0) {
+    if (taxInput === '' || parsed === 0) {
+      setTaxInput('');
+      onTaxChange(0);
+    } else if (!isNaN(parsed) && parsed >= 0) {
       setTaxInput(parsed.toFixed(2));
     }
   };

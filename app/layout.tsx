@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -8,7 +9,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Split - Fair Bill Splitting",
+  title: "Bill splitter",
   description: "Split bills fairly with friends. Scan receipts or enter items manually.",
   manifest: "/manifest.json",
   appleWebApp: {
@@ -17,7 +18,11 @@ export const metadata: Metadata = {
     title: "Split",
   },
   icons: {
-    icon: "/icon.svg",
+    icon: [
+      { url: "/favicon.png", type: "image/png" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.png",
     apple: "/apple-touch-icon.png",
   },
 };
@@ -46,6 +51,7 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} antialiased`}>
         {children}
+        <Analytics />
       </body>
     </html>
   );
