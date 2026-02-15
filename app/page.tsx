@@ -84,13 +84,38 @@ async function compressImage(file: File | Blob): Promise<string> {
 }
 
 async function convertHeifToJpeg(file: File): Promise<Blob> {
-  const heic2any = (await import('heic2any')).default;
-  const result = await heic2any({
-    blob: file,
-    toType: 'image/jpeg',
-    quality: 0.9,
-  });
-  return Array.isArray(result) ? result[0] : result;
+  // First, try native browser decoding (Safari supports HEIC)
+  try {
+    const bitmap = await createImageBitmap(file);
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext('2d')!;
+    ctx.drawImage(bitmap, 0, 0);
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(
+        (blob) => blob ? resolve(blob) : reject(new Error('Canvas conversion failed')),
+        'image/jpeg',
+        0.9
+      );
+    });
+  } catch {
+    // Native decoding failed, try heic2any
+    console.log('Native HEIC decoding failed, trying heic2any...');
+  }
+
+  try {
+    const heic2any = (await import('heic2any')).default;
+    const result = await heic2any({
+      blob: file,
+      toType: 'image/jpeg',
+      quality: 0.9,
+    });
+    return Array.isArray(result) ? result[0] : result;
+  } catch (err) {
+    console.error('heic2any failed:', err);
+    throw new Error('Could not convert this HEIC file. Try sharing it as JPEG from the Photos app.');
+  }
 }
 
 async function getImageBase64(file: File): Promise<string> {
