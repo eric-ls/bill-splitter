@@ -3,6 +3,7 @@
 import { Trash2 } from 'lucide-react';
 import { BillItem, Person } from '@/lib/calculations';
 import { colorClasses } from './PersonChip';
+import Button from './Button';
 
 interface ItemRowProps {
   item: BillItem;
@@ -38,12 +39,14 @@ export default function ItemRow({
         <span className="text-sm font-medium text-slate-700 tabular-nums">
           ${item.price.toFixed(2)}
         </span>
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={onRemove}
-          className="cursor-pointer p-1 text-slate-400 hover:text-red-500"
+          className="!p-1 text-slate-400 hover:text-red-500 hover:bg-transparent"
         >
           <Trash2 className="w-4 h-4" />
-        </button>
+        </Button>
       </div>
 
       {/* Assignment chips - only show when there are people */}
@@ -57,7 +60,7 @@ export default function ItemRow({
                 key={person.id}
                 onClick={() => onToggleAssignment(person.id)}
                 onDoubleClick={() => onSelectOnly(person.id)}
-                className={`border px-2 py-0.5 text-xs font-semibold rounded-full transition-colors cursor-pointer ${isAssigned
+                className={`!px-2 !py-0.5 text-xs font-semibold !rounded-full border cursor-pointer ${isAssigned
                   ? `${colors.text} ${colors.bgLight} ${colors.border}`
                   : 'text-slate-500 border-slate-300'
                   }`}

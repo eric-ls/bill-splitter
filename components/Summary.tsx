@@ -59,20 +59,23 @@ export default function Summary({ summary, people }: SummaryProps) {
                 ))}
 
                 {(person.tax > 0 || person.tip > 0) && (
-                  <div className="border-t border-slate-100 pt-1.5 mt-2 space-y-1">
-                    {person.tax > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-400">Tax</span>
-                        <span className="text-slate-500 tabular-nums">${person.tax.toFixed(2)}</span>
-                      </div>
-                    )}
-                    {person.tip > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-400">Tip</span>
-                        <span className="text-slate-500 tabular-nums">${person.tip.toFixed(2)}</span>
-                      </div>
-                    )}
-                  </div>
+                  <>
+                    <div className="h-px bg-slate-200 mt-2" />
+                    <div className="pt-1.5 space-y-1">
+                      {person.tax > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-400">Tax</span>
+                          <span className="text-slate-500 tabular-nums">${person.tax.toFixed(2)}</span>
+                        </div>
+                      )}
+                      {person.tip > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-slate-400">Tip</span>
+                          <span className="text-slate-500 tabular-nums">${person.tip.toFixed(2)}</span>
+                        </div>
+                      )}
+                    </div>
+                  </>
                 )}
               </div>
             </div>

@@ -27,11 +27,11 @@ export function PersonChip({ person, onRemove }: PersonChipProps) {
 
   return (
     <div className={`flex items-center gap-1.5 border ${colors.text} ${colors.bgLight} ${colors.border} pl-3 pr-1.5 py-1.5 rounded-full text-sm`}>
-      <span className="font-medium">{person.name}</span>
+      <span className="font-semibold">{person.name}</span>
       {onRemove && (
         <button
           onClick={() => onRemove(person.id)}
-          className="w-5 h-5 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30"
+          className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-black/5 cursor-pointer"
         >
           <X className="w-3 h-3" strokeWidth={2.5} />
         </button>

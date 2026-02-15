@@ -118,6 +118,7 @@ export default function Home() {
   const [items, setItems] = useState<BillItem[]>([]);
   const [tax, setTax] = useState(0);
   const [tipAmount, setTipAmount] = useState(0);
+  const [splitTaxTipEvenly, setSplitTaxTipEvenly] = useState(false);
 
   // Form state
   const [personName, setPersonName] = useState('');
@@ -130,6 +131,7 @@ export default function Home() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const summaryRef = useRef<HTMLDivElement>(null);
   const itemNameInputRef = useRef<HTMLInputElement>(null);
+  const tipSectionRef = useRef<HTMLDivElement>(null);
 
   // Reset confirmation
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -141,7 +143,7 @@ export default function Home() {
   const hasChanges = people.length > 0 || items.length > 0;
   const canContinue = items.length > 0 && people.length > 0;
   const subtotal = items.reduce((sum, item) => sum + item.price, 0);
-  const summary = calculateSplit(items, people, tax, tipAmount);
+  const summary = calculateSplit(items, people, tax, tipAmount, splitTaxTipEvenly);
 
   // People handlers
   const addPerson = () => {
@@ -236,6 +238,7 @@ export default function Home() {
     setItems([]);
     setTax(0);
     setTipAmount(0);
+    setSplitTaxTipEvenly(false);
     setPersonName('');
     setNewItemName('');
     setNewItemPrice('');
@@ -452,10 +455,14 @@ export default function Home() {
 
               {/* Subtotal */}
               {items.length > 0 && (
-                <div className="flex justify-between items-center pt-5 mt-5 border-t border-slate-100">
-                  <span className="text-slate-600 font-medium">Subtotal</span>
-                  <span className="text-lg font-bold text-slate-900 tabular-nums">${subtotal.toFixed(2)}</span>
-                </div>
+                <>
+                  <div className="h-px bg-slate-200 mt-5" />
+
+                  <div className="flex justify-between items-center pt-5">
+                    <span className="text-slate-600 font-medium">Subtotal</span>
+                    <span className="text-lg font-bold text-slate-900 tabular-nums">${subtotal.toFixed(2)}</span>
+                  </div>
+                </>
               )}
             </div>
 
@@ -463,7 +470,12 @@ export default function Home() {
             {!showCalculation && (
               <Button
                 size="lg"
-                onClick={() => setShowCalculation(true)}
+                onClick={() => {
+                  setShowCalculation(true);
+                  setTimeout(() => {
+                    tipSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 100);
+                }}
                 disabled={!canContinue}
                 className="w-full"
               >
@@ -475,6 +487,7 @@ export default function Home() {
 
           {/* Right Column - Tax & Tip */}
           <div
+            ref={tipSectionRef}
             className={`space-y-4 w-full md:shrink-0 md:transition-all md:duration-500 md:ease-out md:overflow-hidden ${showCalculation
               ? 'md:w-[calc(50%-0.5rem)] opacity-100'
               : 'hidden md:block md:w-0 md:opacity-0'
@@ -488,6 +501,8 @@ export default function Home() {
                 onTaxChange={setTax}
                 tipAmount={tipAmount}
                 onTipChange={setTipAmount}
+                splitEvenly={splitTaxTipEvenly}
+                onSplitEvenlyChange={setSplitTaxTipEvenly}
               />
             )}
 

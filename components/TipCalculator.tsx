@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { Check } from 'lucide-react';
 import { calculateTipFromPercent } from '@/lib/calculations';
 import Input from './Input';
 import Button from './Button';
@@ -11,6 +12,8 @@ interface TipCalculatorProps {
   onTaxChange: (tax: number) => void;
   tipAmount: number;
   onTipChange: (tip: number) => void;
+  splitEvenly: boolean;
+  onSplitEvenlyChange: (value: boolean) => void;
 }
 
 export default function TipCalculator({
@@ -19,6 +22,8 @@ export default function TipCalculator({
   onTaxChange,
   tipAmount,
   onTipChange,
+  splitEvenly,
+  onSplitEvenlyChange,
 }: TipCalculatorProps) {
   const [tipMode, setTipMode] = useState<'percent' | 'dollar'>('percent');
   const [tipPercent, setTipPercent] = useState(20);
@@ -145,8 +150,24 @@ export default function TipCalculator({
         </div>
       </div>
 
+      {/* Split evenly checkbox */}
+      <label className="flex items-center gap-3 cursor-pointer py-2 mb-3">
+        <input
+          type="checkbox"
+          checked={splitEvenly}
+          onChange={(e) => onSplitEvenlyChange(e.target.checked)}
+          className="sr-only peer"
+        />
+        <div className="w-4 h-4 border border-slate-300 rounded flex items-center justify-center peer-checked:bg-blue-500 peer-checked:border-blue-500 transition-colors">
+          {splitEvenly && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+        </div>
+        <span className="text-sm text-slate-700">Split tax & tip evenly</span>
+      </label>
+
       {/* Totals */}
-      <div className="border-t border-slate-100 pt-4 space-y-2">
+      <div className="h-px bg-slate-200" />
+
+      <div className="pt-4 space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-slate-500">Subtotal</span>
           <span className="text-slate-700 tabular-nums">${subtotal.toFixed(2)}</span>
@@ -161,7 +182,8 @@ export default function TipCalculator({
           </span>
           <span className="text-slate-700 tabular-nums">${tipAmount.toFixed(2)}</span>
         </div>
-        <div className="flex justify-between items-center pt-5 mt-5 border-t border-slate-100">
+        <div className="h-px bg-slate-200 mt-7" />
+        <div className="flex justify-between items-center pt-4">
           <span className="font-semibold text-slate-900">Total</span>
           <span className="text-xl font-bold text-slate-900 tabular-nums">${total.toFixed(2)}</span>
         </div>

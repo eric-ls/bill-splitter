@@ -59,7 +59,8 @@ export function calculateSplit(
   items: BillItem[],
   people: Person[],
   tax: number,
-  tipAmount: number
+  tipAmount: number,
+  splitTaxTipEvenly: boolean = false
 ): BillSummary {
   const subtotal = items.reduce((sum, item) => sum + item.price, 0);
 
@@ -92,12 +93,22 @@ export function calculateSplit(
     });
   });
 
-  // Calculate proportional tax and tip for each person
+  // Calculate tax and tip for each person (either proportionally or evenly)
   const perPerson: PersonSummary[] = people.map((person) => {
     const personSubtotal = personSubtotals[person.id];
-    const proportion = subtotal > 0 ? personSubtotal / subtotal : 1 / people.length;
-    const personTax = tax * proportion;
-    const personTip = tipAmount * proportion;
+    let personTax: number;
+    let personTip: number;
+
+    if (splitTaxTipEvenly) {
+      // Split evenly among all people
+      personTax = tax / people.length;
+      personTip = tipAmount / people.length;
+    } else {
+      // Split proportionally based on subtotal
+      const proportion = subtotal > 0 ? personSubtotal / subtotal : 1 / people.length;
+      personTax = tax * proportion;
+      personTip = tipAmount * proportion;
+    }
 
     return {
       personId: person.id,
