@@ -176,8 +176,11 @@ export default function Home() {
       }]);
       setNewItemName('');
       setNewItemPrice('');
-      // Focus back on item name input
-      setTimeout(() => itemNameInputRef.current?.focus(), 0);
+      // Focus back on item name input and scroll into view
+      setTimeout(() => {
+        itemNameInputRef.current?.focus();
+        itemNameInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 0);
     }
   };
 
@@ -322,7 +325,7 @@ export default function Home() {
       )}
 
       {/* Content */}
-      <div className="max-w-5xl mx-auto px-4 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] overflow-hidden">
+      <div className="max-w-5xl mx-auto px-4 py-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] md:overflow-hidden">
         {/* Two-column layout with animation - stacks on mobile */}
         <div className="flex flex-col md:flex-row gap-4 items-start">
           {/* Left Column - People + Items */}
