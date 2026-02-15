@@ -16,7 +16,10 @@ interface ParsedReceipt {
 }
 
 // Image handling utilities
-function readAsDataURL(file: File): Promise<string> {
+const MAX_IMAGE_SIZE = 4 * 1024 * 1024; // 4MB (leaving buffer for 5MB API limit)
+const MAX_DIMENSION = 2000; // Max width or height
+
+function readAsDataURL(file: File | Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
@@ -29,28 +32,84 @@ function isSupported(file: File): boolean {
   return ['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type);
 }
 
-async function convertToJpeg(file: File): Promise<string> {
-  const bitmap = await createImageBitmap(file);
+function isHeif(file: File): boolean {
+  return file.type.includes('heif') || file.type.includes('heic') ||
+    file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+}
+
+async function loadImage(src: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error('Failed to load image'));
+    img.src = src;
+  });
+}
+
+async function compressImage(file: File | Blob): Promise<string> {
+  const dataUrl = await readAsDataURL(file);
+  const img = await loadImage(dataUrl);
+
+  // Calculate new dimensions
+  let { width, height } = img;
+  if (width > MAX_DIMENSION || height > MAX_DIMENSION) {
+    const ratio = Math.min(MAX_DIMENSION / width, MAX_DIMENSION / height);
+    width = Math.round(width * ratio);
+    height = Math.round(height * ratio);
+  }
+
+  // Draw to canvas
   const canvas = document.createElement('canvas');
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
+  canvas.width = width;
+  canvas.height = height;
   const ctx = canvas.getContext('2d')!;
-  ctx.drawImage(bitmap, 0, 0);
-  return canvas.toDataURL('image/jpeg', 0.9);
+  ctx.drawImage(img, 0, 0, width, height);
+
+  // Try different quality levels to get under size limit
+  for (const quality of [0.8, 0.6, 0.4, 0.3]) {
+    const result = canvas.toDataURL('image/jpeg', quality);
+    const size = Math.round((result.length - 'data:image/jpeg;base64,'.length) * 0.75);
+    if (size <= MAX_IMAGE_SIZE) {
+      return result;
+    }
+  }
+
+  // Last resort: reduce dimensions further
+  const smallerCanvas = document.createElement('canvas');
+  smallerCanvas.width = Math.round(width * 0.5);
+  smallerCanvas.height = Math.round(height * 0.5);
+  const smallerCtx = smallerCanvas.getContext('2d')!;
+  smallerCtx.drawImage(canvas, 0, 0, smallerCanvas.width, smallerCanvas.height);
+  return smallerCanvas.toDataURL('image/jpeg', 0.5);
+}
+
+async function convertHeifToJpeg(file: File): Promise<Blob> {
+  const heic2any = (await import('heic2any')).default;
+  const result = await heic2any({
+    blob: file,
+    toType: 'image/jpeg',
+    quality: 0.9,
+  });
+  return Array.isArray(result) ? result[0] : result;
 }
 
 async function getImageBase64(file: File): Promise<string> {
-  if (isSupported(file)) return readAsDataURL(file);
-  try {
-    return await convertToJpeg(file);
-  } catch {
-    const isHeif = file.type.includes('heif') || file.type.includes('heic') ||
-      file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
-    throw new Error(isHeif
-      ? 'HEIF photos are not supported. Please use JPEG or PNG.'
-      : 'This image format is not supported. Please use JPEG or PNG.'
-    );
+  let processedFile: File | Blob = file;
+
+  // Convert HEIF first
+  if (isHeif(file)) {
+    try {
+      processedFile = await convertHeifToJpeg(file);
+    } catch (err) {
+      console.error('HEIF conversion error:', err);
+      throw new Error('Failed to convert HEIF photo. Please try a different image.');
+    }
+  } else if (!isSupported(file)) {
+    throw new Error('This image format is not supported. Please use JPEG, PNG, or HEIF.');
   }
+
+  // Compress if needed
+  return compressImage(processedFile);
 }
 
 export default function Home() {
